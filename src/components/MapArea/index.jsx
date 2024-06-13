@@ -1,56 +1,107 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Box } from '@mui/material';
-import { MapContainer, TileLayer, FeatureGroup } from 'react-leaflet';
-import { EditControl } from 'react-leaflet-draw';
+import L from 'leaflet';
+import 'leaflet-draw';
+import { 
+    //useMapEvent
+    MapContainer, 
+    TileLayer, 
+    FeatureGroup,
+    Marker
+} from 'react-leaflet';
+import DrawingComponent from '../DrawingComponent';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
-import L from 'leaflet';
+import iconRetinaUrl from '../../assets/icons/marker-icon-2x.png';
+import iconUrl from '../../assets/icons/marker-icon.png';
+import shadowUrl from '../../assets/icons/marker-shadow.png';
 
-const initialLocation = [ //Comodoro Rivadavia
-    -45.8641,
-    -67.4977
-];
 
-const MapComponent = () => {
+const iconOptions = {
+    iconRetinaUrl,
+    iconUrl,
+    shadowUrl,
+    iconSize: [15, 15],
+    iconAnchor: [7.5, 7.5]
+};
+
+const mapContainerStyle = { 
+    height: "75vh", 
+    width: "100%" 
+};
+
+/*
+const MapClickHandler = ({ onClick }) => {
+    useMapEvent('click', (e) => {
+        onClick(e.latlng);
+    });
+
+    return null;
+};
+*/
+
+
+const MapComponent = ({initialLocation, features, setFeatures, onClick}) => {
+
     useEffect(() => {
-        // Fix Leaflet's default icon issue with Webpack
         delete L.Icon.Default.prototype._getIconUrl;
-        L.Icon.Default.mergeOptions({
-            iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-        });
+        L.Icon.Default.mergeOptions(iconOptions);
     }, []);
 
-    const handleCreated = (e) => {
-        const type = e.layerType;
-        const layer = e.layer;
-        if (type === 'marker') {
-            console.log('Marker created:', layer.getLatLng());
-        } else if (type === 'polygon') {
-            console.log('Polygon created:', layer.getLatLngs());
-        }
+    /*
+    const handleMapClick = latlng => {
+        console.log('Map clicked at:', latlng);
+    };
+    */
+
+    const handleGeometryCreate = (layer) => {
+        const newFeature = layer.toGeoJSON();
+        newFeature.id = layer._leaflet_id;
+        setFeatures(prevFeatures => [...prevFeatures, newFeature]);
     };
 
+    const handleGeometryEdit = (layers, operation) => {
+        if(operation === 'delete') {
+            const ids = Object.keys(layers._layers);
+            setFeatures(prevFeatures => prevFeatures.filter(f => !ids.includes(f.id.toString())));
+        } else {
+            const editedFeatures = layers.getLayers().map(layer => {
+                const editedFeature = layer.toGeoJSON();
+                editedFeature.id = layer._leaflet_id;
+                return editedFeature;
+            });
+            setFeatures(prevFeatures => prevFeatures.map(f => {
+                const editedFeature = editedFeatures.find(ef => ef.id === f.id);
+                return editedFeature ? editedFeature : f;
+            }));
+        }
+    };
+ 
     return (
         <Box sx={{mt:3}}>
-            <MapContainer center={initialLocation} zoom={13} style={{ height: "75vh", width: "100%" }}>
+            <MapContainer 
+                center={initialLocation} 
+                zoom={13} 
+                style={mapContainerStyle}>
                 <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"/>
+                {/*<MapClickHandler onClick={handleMapClick} />*/}
                 <FeatureGroup>
-                    <EditControl
-                        position="topright"
-                        onCreated={handleCreated}
-                        draw={{
-                            rectangle: false,
-                            polyline: false,
-                            circle: false,
-                            circlemarker: false,
-                        }}
-                    />
+                    <DrawingComponent 
+                        onCreate={layer => handleGeometryCreate(layer)}
+                        onEdit={layers => handleGeometryEdit(layers, 'edit')}
+                        onDelete={layer => handleGeometryEdit(layer, 'delete')}/>
+                </FeatureGroup>
+                <FeatureGroup>
+                    {
+                        features.map((feature, index) => (
+                            feature.geometry.type === 'Point' && <Marker key={index} position={feature.geometry.coordinates}/>
+                        ))
+                    }
                 </FeatureGroup>
             </MapContainer>
         </Box>
     );
 };
+
 
 export default MapComponent;
