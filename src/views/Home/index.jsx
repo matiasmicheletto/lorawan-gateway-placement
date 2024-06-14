@@ -17,8 +17,7 @@ const View = () => {
             <MapArea 
                 initialLocation={initialLocation}
                 features={features}
-                setFeatures={setFeatures}
-                onClick={e => console.log("clicked", e)}/>
+                setFeatures={setFeatures}/>
         </MainView>
     );
 };

@@ -5,6 +5,12 @@ import bbox from "@turf/bbox";
 // Average of array
 export const arrayAvg = (arr, attr) => arr.reduce((a, b) => a + b[attr], 0) / arr.length;
 
+export const latlng2CanvasXY = node => {
+    return {
+        x: node.lat, 
+        y: node.lng
+    };
+};
 
 export const latlng2GeoJson = (latlng, type) => { // latlng = [lat, lng], type = "Point", "Polygon"
     return {
@@ -15,7 +21,7 @@ export const latlng2GeoJson = (latlng, type) => { // latlng = [lat, lng], type =
             coordinates: latlng
         }
     };
-}
+};
 
 export const feature2Text = geometryType => { // Returns a function to convert feature to text
     return { 
