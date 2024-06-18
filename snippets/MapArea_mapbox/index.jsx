@@ -58,7 +58,7 @@ const geometryStyles = {
     }
 };
 
-const MapArea = ({features, onChange}) => {
+const LeafletMapArea = ({features, onChange}) => {
     
     const [editingCoords, setEditingCoords] = useState(false);
     const [viewState, setViewState] = useState(initialViewState);
@@ -143,4 +143,4 @@ const MapArea = ({features, onChange}) => {
     );
 };
 
-export default MapArea;
+export default LeafletMapArea;
