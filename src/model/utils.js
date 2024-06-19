@@ -1,35 +1,45 @@
-export const csv2Matrix = csv => { // csv string to matrix
-    const regex = /\[(-?\d+\.\d+),(-?\d+\.\d+)\]/g;
-    const matrix = [];
-    let match = regex.exec(csv);
-    while(match) {
-        matrix.push([parseFloat(match[1]), parseFloat(match[2])]);
-        match = regex.exec(csv);
-    }
-    return matrix;
-};
-    
-export const network2GeoJSON = network => { // {nodes:[], areas:[], links:[]} using [lng,lat] format
-    const features = [];
-    Object.keys(network).forEach(key => 
-        features.push(...network[key].map((geometry, index) => ({
-            type: "Feature",
-            properties: {id: index},
-            geometry:{
-                type: key === "nodes" ? "Point" : key === "areas" ? "Polygon" : "Polyline",
-                coordinates: geometry
-            }
-        })))
-    );
+export const matrix2CSV = matrix => matrix.map(row => row.join(',')).join('\n');
 
-    return {type: "FeatureCollection", features};
+export const csv2Matrix = csv => csv
+                            .split('\n')
+                            .map(row => row.split(','))
+                            .filter(row => row.length > 1)
+                            .map(row => row.map(cell => parseFloat(cell)));
+
+
+export const network2GeoJSON = network => { // {nodes:[], links:[]} -> {type: "FeatureCollection", features: []}
+    const nodes = network.nodes.map((node, index) => ({
+                type: "Feature",
+                properties: {id: index},
+                geometry:{
+                    type: "Point",
+                    coordinates: node
+                }
+            }));
+    const links = network.links.map(link => ({
+                type: "Feature",
+                properties: {},
+                geometry:{
+                    type: "Polyline",
+                    coordinates: [network.nodes[link[0]], network.nodes[link[1]]]
+                }
+            }));
+    return {
+        type: "FeatureCollection", 
+        features: [...nodes, ...links]
+    };
 };
 
-export const geoJSON2network = geoJSON => { // {nodes:[], areas:[]} using [lng,lat] format
-    const nodes = geoJSON.features.filter(f => f.geometry.type === "Point").map(f => f.geometry.coordinates);
-    const areas = geoJSON.features.filter(f => f.geometry.type === "Polygon").map(f => f.geometry.coordinates);
-    const links = geoJSON.features.filter(f => f.geometry.type === "Polyline").map(f => f.geometry.coordinates);
-    return {nodes, areas, links};
+export const geoJSON2Network = geoJSON => { // {type: "FeatureCollection", features: []} -> {nodes:[], links:[]}
+    const nodes = geoJSON.features
+                            .filter(f => f.geometry.type === "Point")
+                            .map(f => f.geometry.coordinates);
+    const links = geoJSON.features
+                            .filter(f => f.geometry.type === "LineString")
+                            .map(f => f.geometry.coordinates
+                                            .map(c => nodes.indexOf(c))
+                                );
+    return {nodes, links};
 };
 
 export const latlng2Canvas = (lat, lng, map) => { // lat, lng in degrees

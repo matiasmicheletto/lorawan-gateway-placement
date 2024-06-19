@@ -5,7 +5,8 @@ import 'leaflet-draw';
 import { 
     MapContainer, 
     TileLayer, 
-    FeatureGroup
+    FeatureGroup,
+    GeoJSON
 } from 'react-leaflet';
 import Feature from '../Feature';
 import DrawingComponent from '../DrawingComponent';
@@ -53,11 +54,12 @@ const MapComponent = props => { // Displays geoJSON features with change callbac
             const ids = Object.keys(layers._layers);
             setFeatureCollection(prevFeatures => prevFeatures.filter(f => !ids.includes(f.id.toString())));
         } else {
-            const editedFeatures = layers.getLayers().map(layer => {
-                const editedFeature = layer.toGeoJSON();
-                editedFeature.id = layer._leaflet_id;
-                return editedFeature;
-            });
+            const editedFeatures = layers.getLayers()
+                .map(layer => {
+                    const editedFeature = layer.toGeoJSON();
+                    editedFeature.id = layer._leaflet_id;
+                    return editedFeature;
+                });
             setFeatureCollection(prevFeatures => prevFeatures.map(f => {
                 const editedFeature = editedFeatures.find(ef => ef.id === f.id);
                 return editedFeature ? editedFeature : f;
@@ -77,7 +79,7 @@ const MapComponent = props => { // Displays geoJSON features with change callbac
                     <DrawingComponent 
                         onCreate={layer => handleGeometryCreate(layer)}
                         onEdit={layers => handleGeometryEdit(layers, 'edit')}
-                        onDelete={layer => handleGeometryEdit(layer, 'delete')}/>
+                        onDelete={layers => handleGeometryEdit(layers, 'delete')}/>
                 </FeatureGroup>
                 <FeatureGroup>
                     {
@@ -86,6 +88,7 @@ const MapComponent = props => { // Displays geoJSON features with change callbac
                         ))
                     }
                 </FeatureGroup>
+                {/*<GeoJSON data={featureCollection} key={JSON.stringify(featureCollection.features)}/>*/}
             </MapContainer>
         </Box>
     );
