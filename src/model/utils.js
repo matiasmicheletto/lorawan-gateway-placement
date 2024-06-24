@@ -4,16 +4,22 @@ export const csv2Matrix = csv => csv
                             .split('\n')
                             .map(row => row.split(','))
                             .filter(row => row.length > 1)
-                            .map(row => row.map(cell => parseFloat(cell)));
+                            .map(row => row.map(value => {
+                                const number = parseFloat(value);
+                                return isNaN(number) ? value : number;
+                            }));
 
 
 export const network2GeoJSON = network => { // {nodes:[], links:[]} -> {type: "FeatureCollection", features: []}
     const nodes = network.nodes.map((node, index) => ({
                 type: "Feature",
-                properties: {id: index},
+                properties: {
+                    id: index,
+                    type: node[2] || ''
+                },
                 geometry:{
                     type: "Point",
-                    coordinates: node
+                    coordinates: [node[0], node[1]]
                 }
             }));
     const links = network.links.map(link => ({
@@ -33,7 +39,7 @@ export const network2GeoJSON = network => { // {nodes:[], links:[]} -> {type: "F
 export const geoJSON2Network = geoJSON => { // {type: "FeatureCollection", features: []} -> {nodes:[], links:[]}
     const nodes = geoJSON.features
                             .filter(f => f.geometry.type === "Point")
-                            .map(f => f.geometry.coordinates);
+                            .map(f => [...f.geometry.coordinates, f.properties.type]);
     const links = geoJSON.features
                             .filter(f => f.geometry.type === "LineString")
                             .map(f => f.geometry.coordinates
@@ -41,6 +47,14 @@ export const geoJSON2Network = geoJSON => { // {type: "FeatureCollection", featu
                                 );
     return {nodes, links};
 };
+
+export const layer2GeoJSON = layer => { // Adapt format to system model
+    const feature = layer.toGeoJSON();
+    feature.geometry.coordinates = feature.geometry.coordinates.reverse();
+    feature.properties.type = 'ed';
+    feature.id = layer._leaflet_id;
+    return feature;
+}
 
 export const latlng2Canvas = (lat, lng, map) => { // lat, lng in degrees
     const latRad = lat * Math.PI / 180;

@@ -1,26 +1,25 @@
 import { useEffect } from 'react';
-import { Box } from '@mui/material';
 import L from 'leaflet';
+import { Box } from '@mui/material';
 import 'leaflet-draw';
 import { 
     MapContainer, 
     TileLayer, 
-    FeatureGroup,
-    GeoJSON
+    FeatureGroup
 } from 'react-leaflet';
 import Feature from '../Feature';
 import DrawingComponent from '../DrawingComponent';
+import { layer2GeoJSON } from '../../model/utils';
+import edIconURL from '../../assets/icons/ed-icon.png'; // Default icon
+import shadowUrl from '../../assets/icons/marker-shadow.png';
+import iconRetinaUrl from '../../assets/icons/marker-icon-2x.png';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-draw/dist/leaflet.draw.css';
-import iconRetinaUrl from '../../assets/icons/marker-icon-2x.png';
-import iconUrl from '../../assets/icons/marker-icon.png';
-import shadowUrl from '../../assets/icons/marker-shadow.png';
-
 
 const iconOptions = {
-    iconRetinaUrl,
-    iconUrl,
+    iconUrl: edIconURL,
     shadowUrl,
+    iconRetinaUrl,
     iconSize: [15, 15],
     iconAnchor: [7.5, 7.5]
 };
@@ -34,14 +33,15 @@ const MapComponent = props => { // Displays geoJSON features with change callbac
 
     const {initialLocation, featureCollection, setFeatureCollection} = props;
 
+    
     useEffect(() => {
         delete L.Icon.Default.prototype._getIconUrl;
         L.Icon.Default.mergeOptions(iconOptions);
     }, []);
+    
 
     const handleGeometryCreate = (layer) => {
-        const newFeature = layer.toGeoJSON();
-        newFeature.id = layer._leaflet_id;
+        const newFeature = layer2GeoJSON(layer);
         const newFeatureCollection = {
             type: "FeatureCollection",
             features: [...featureCollection.features, newFeature]

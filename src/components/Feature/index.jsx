@@ -1,24 +1,28 @@
+import L from 'leaflet';
 import { Marker, Polygon, Polyline } from 'react-leaflet';
+import edIconURL from '../../assets/icons/ed-icon.png';
+import gwIconURL from '../../assets/icons/gw-icon.png';
+
+
+const iconOptions = {
+    iconSize: [15, 15],
+    iconAnchor: [7.5, 7.5]
+};
+
+const edIcon = new L.Icon({iconUrl: edIconURL, ...iconOptions});
+const gwIcon = new L.Icon({iconUrl: gwIconURL, ...iconOptions});
+
+const f = (coordinates, icon = null) => ({
+    'Point': <Marker position={coordinates} icon={icon}/>,
+    'Polygon': <Polygon positions={coordinates} />,
+    'Polyline': <Polyline positions={coordinates} />
+});
 
 const Feature = ({ feature }) => {
-    const geometry = feature.geometry;
-
-    switch (geometry.type) {
-        case 'Point':
-            return (
-                <Marker position={geometry.coordinates} />
-            );
-        case 'Polygon':
-            return (
-                <Polygon positions={geometry.coordinates} />
-            );
-        case 'Polyline':
-            return (
-                <Polyline positions={geometry.coordinates} />
-            );
-        default:
-            return null;
-    }
+    const {type, coordinates} = feature.geometry;
+    const nType = feature.properties.type;
+    const icon = nType === 'gw' ? gwIcon : edIcon;
+    return f(coordinates, icon)[type];
 };
 
 export default Feature;

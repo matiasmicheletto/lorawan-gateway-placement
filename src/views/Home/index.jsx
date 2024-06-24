@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Box, Button } from '@mui/material';
 import MainView from "../../components/MainView";
 import background from "../../assets/backgrounds/background3.jpg";
-import LeafletMapArea from "../../components/LeafletMapArea";
+import MapComponent from "../../components/LeafletMapArea"; // CanvasMapArea
 import { compute } from "../../model/core.js";
 import { 
     csv2Matrix,
@@ -36,17 +36,17 @@ const View = () => {
 
     return (
         <MainView background={background}>
-            <LeafletMapArea 
+            <MapComponent 
                 initialLocation={initialLocation}
                 featureCollection={featureCollection}
                 setFeatureCollection={setFeatureCollection}/>
-            <Box sx={{height: "10vh"}}>
+            
+            <Box sx={{mt:1, textAlign: "right"}}>
                 <Button 
                     variant="contained" 
                     color="primary" 
-                    sx={{position: "absolute", bottom: "10px", right: "10px"}}
                     onClick={handleCompute}>
-                        Compute
+                        Calcular
                 </Button>
             </Box>
         </MainView>
