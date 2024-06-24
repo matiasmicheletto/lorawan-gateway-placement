@@ -52,7 +52,10 @@ const MapComponent = props => { // Displays geoJSON features with change callbac
     const handleGeometryEdit = (layers, operation) => {
         if(operation === 'delete') {
             const ids = Object.keys(layers._layers);
-            setFeatureCollection(prevFeatures => prevFeatures.filter(f => !ids.includes(f.id.toString())));
+            setFeatureCollection(prevFeatureCollection => {
+                prevFeatureCollection.features = prevFeatureCollection.features.filter(f => !ids.includes(f.id));
+                return prevFeatureCollection;
+            });
         } else {
             const editedFeatures = layers.getLayers()
                 .map(layer => {

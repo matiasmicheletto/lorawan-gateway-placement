@@ -12,7 +12,12 @@ const iconOptions = {
 const edIcon = new L.Icon({iconUrl: edIconURL, ...iconOptions});
 const gwIcon = new L.Icon({iconUrl: gwIconURL, ...iconOptions});
 
-const f = (coordinates, icon = null) => ({
+const iconTypes = {
+    'ed': edIcon,
+    'gw': gwIcon
+};
+
+const getFeatureComponent = (coordinates, icon = null) => ({
     'Point': <Marker position={coordinates} icon={icon}/>,
     'Polygon': <Polygon positions={coordinates} />,
     'Polyline': <Polyline positions={coordinates} />
@@ -21,8 +26,8 @@ const f = (coordinates, icon = null) => ({
 const Feature = ({ feature }) => {
     const {type, coordinates} = feature.geometry;
     const nType = feature.properties.type;
-    const icon = nType === 'gw' ? gwIcon : edIcon;
-    return f(coordinates, icon)[type];
+    const icon = nType ? iconTypes[nType] : null;
+    return getFeatureComponent(coordinates, icon)[type];
 };
 
 export default Feature;

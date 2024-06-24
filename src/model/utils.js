@@ -1,5 +1,7 @@
 export const matrix2CSV = matrix => matrix.map(row => row.join(',')).join('\n');
 
+export const tensor2CSV = tensor => tensor.map(matrix => matrix2CSV(matrix)).join('\n\n');
+
 export const csv2Matrix = csv => csv
                             .split('\n')
                             .map(row => row.split(','))
@@ -9,8 +11,14 @@ export const csv2Matrix = csv => csv
                                 return isNaN(number) ? value : number;
                             }));
 
+export const csv2Tensor = csv => csv
+                            .split('\n\n')
+                            .map(matrix => csv2Matrix(matrix));
 
-export const network2GeoJSON = network => { // {nodes:[], links:[]} -> {type: "FeatureCollection", features: []}
+const getRandomId = () => Math.floor(Math.random() * 10000);
+
+export const network2GeoJSON = network => { // {nodes:[], links:[], polygons} -> {type: "FeatureCollection", features: []}
+
     const nodes = network.nodes.map((node, index) => ({
                 type: "Feature",
                 properties: {
@@ -22,6 +30,7 @@ export const network2GeoJSON = network => { // {nodes:[], links:[]} -> {type: "F
                     coordinates: [node[0], node[1]]
                 }
             }));
+
     const links = network.links.map(link => ({
                 type: "Feature",
                 properties: {},
@@ -30,9 +39,19 @@ export const network2GeoJSON = network => { // {nodes:[], links:[]} -> {type: "F
                     coordinates: [network.nodes[link[0]], network.nodes[link[1]]]
                 }
             }));
+
+    const polygons = network.polygons.map(polygon => ({
+                type: "Feature",
+                properties: {},
+                geometry:{
+                    type: "Polygon",
+                    coordinates: [polygon]
+                },
+                id: getRandomId()
+            }));
     return {
         type: "FeatureCollection", 
-        features: [...nodes, ...links]
+        features: [...nodes, ...links, ...polygons]
     };
 };
 
