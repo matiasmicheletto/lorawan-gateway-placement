@@ -17,17 +17,18 @@ const iconTypes = {
     'gw': gwIcon
 };
 
-const getFeatureComponent = (coordinates, icon = null) => ({
+const getFeatureComponent = (coordinates, icon = null, polyColor = "") => ({
     'Point': <Marker position={coordinates} icon={icon}/>,
-    'Polygon': <Polygon positions={coordinates} />,
-    'Polyline': <Polyline positions={coordinates} />
+    'Polygon': <Polygon positions={coordinates} color={polyColor}/>,
+    'Polyline': <Polyline positions={coordinates} color={polyColor} />
 });
 
 const Feature = ({ feature }) => {
     const {type, coordinates} = feature.geometry;
     const nType = feature.properties.type;
     const icon = nType ? iconTypes[nType] : null;
-    return getFeatureComponent(coordinates, icon)[type];
+    const color = feature.properties.color;
+    return getFeatureComponent(coordinates, icon, color)[type];
 };
 
 export default Feature;

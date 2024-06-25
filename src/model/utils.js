@@ -1,3 +1,5 @@
+import { mapColors } from "./constants";
+
 export const matrix2CSV = matrix => matrix.map(row => row.join(',')).join('\n');
 
 export const tensor2CSV = tensor => tensor.map(matrix => matrix2CSV(matrix)).join('\n\n');
@@ -17,54 +19,105 @@ export const csv2Tensor = csv => csv
 
 const getRandomId = () => Math.floor(Math.random() * 10000);
 
-export const network2GeoJSON = network => { // {nodes:[], links:[], polygons} -> {type: "FeatureCollection", features: []}
+export const network2GeoJSON = network => {
 
-    const nodes = network.nodes.map((node, index) => ({
-                type: "Feature",
-                properties: {
-                    id: index,
-                    type: node[2] || ''
-                },
-                geometry:{
-                    type: "Point",
-                    coordinates: [node[0], node[1]]
-                }
-            }));
+    const eds = network.end_devices.map((ed, index) => ({
+        type: "Feature",
+        properties: {
+            id: index,
+            type: 'ed',
+            ufs: ed.ufs
+        },
+        geometry:{
+            type: "Point",
+            coordinates: ed.location
+        }
+    }));
 
-    const links = network.links.map(link => ({
-                type: "Feature",
-                properties: {},
-                geometry:{
-                    type: "Polyline",
-                    coordinates: [network.nodes[link[0]], network.nodes[link[1]]]
-                }
-            }));
+    const gws = network.gateways.map((gw, index) => ({
+        type: "Feature",
+        properties: {
+            id: index,
+            type: 'gw',
+            sf_ranges: gw.sf_ranges
+        },
+        geometry:{
+            type: "Point",
+            coordinates: gw.location
+        }
+    }));
 
-    const polygons = network.polygons.map(polygon => ({
-                type: "Feature",
-                properties: {},
-                geometry:{
-                    type: "Polygon",
-                    coordinates: [polygon]
-                },
-                id: getRandomId()
-            }));
+    const points = [...eds, ...gws];
+    const polygons = [];
+
+    network.gateways.forEach((gw, index) => {
+        const sfPolys = new Array(gw.sf_ranges.length); // Polygons for each SF
+        gw.sf_ranges
+                .forEach( (sfRange, sfIdx) => {
+                    sfPolys[sfIdx] = {
+                        type: "Feature",
+                        properties: {
+                            id: index,
+                            name: `sf${sfIdx+7}`,
+                            color: mapColors.sfs[sfIdx],
+                            type: 'sf'
+                        },
+                        geometry:{
+                            type: "Polygon",
+                            coordinates: sfRange
+                        }
+                    };
+                });
+        polygons.push(...sfPolys);
+    });
+
+    const links = network.connections.map((connection, cIndex) => ({
+        type: "Feature",
+        properties: {
+            id: getRandomId(),
+            color: mapColors.sfs[connection[2]-7],
+            type: 'link'
+        },
+        geometry:{
+            type: "Polyline",
+            coordinates: [
+                network.gateways[connection[0]].location,
+                network.end_devices[connection[1]].location 
+            ]
+        }
+    }));
+
     return {
         type: "FeatureCollection", 
-        features: [...nodes, ...links, ...polygons]
+        features: [...points, ...polygons , ...links]
     };
 };
 
-export const geoJSON2Network = geoJSON => { // {type: "FeatureCollection", features: []} -> {nodes:[], links:[]}
-    const nodes = geoJSON.features
-                            .filter(f => f.geometry.type === "Point")
-                            .map(f => [...f.geometry.coordinates, f.properties.type]);
-    const links = geoJSON.features
-                            .filter(f => f.geometry.type === "LineString")
-                            .map(f => f.geometry.coordinates
-                                            .map(c => nodes.indexOf(c))
-                                );
-    return {nodes, links};
+export const geoJSON2Network = geoJSON => {
+
+    const end_devices = geoJSON.features
+                            .filter(f => f.properties.type === "ed")
+                            .map(f => ({
+                                location: f.geometry.coordinates,
+                                ufs: f.properties.ufs
+                            }));
+
+    const gateways = geoJSON.features
+                            .filter(f => f.properties.type === "gw")
+                            .map(f => ({
+                                location: f.geometry.coordinates,
+                                sf_ranges: f.properties.sf_ranges
+                            }));
+
+    const connections = geoJSON.features
+                            .filter(f => f.properties.type === "link")
+                            .map(f => {
+                                const gwIndex = gateways.findIndex(gw => gw.location === f.geometry.coordinates[0]);
+                                const edIndex = gateways.findIndex(ed => ed.location === f.geometry.coordinates[1]);
+                                return [gwIndex, edIndex];
+                            });
+
+    return {gateways, end_devices, connections};
 };
 
 export const layer2GeoJSON = layer => { // Adapt format to system model
@@ -73,7 +126,7 @@ export const layer2GeoJSON = layer => { // Adapt format to system model
     feature.properties.type = 'ed';
     feature.id = layer._leaflet_id;
     return feature;
-}
+};
 
 export const latlng2Canvas = (lat, lng, map) => { // lat, lng in degrees
     const latRad = lat * Math.PI / 180;

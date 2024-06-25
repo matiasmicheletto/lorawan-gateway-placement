@@ -4,22 +4,31 @@ Gateway placement problem for smartcities with topology constraints
 
 ## Imported data format
 
-Data is imported and exported in plain text, using csv format. Examples:
+Data is imported and exported in plain text, using json format. Structure is as follows:
 
-Nodes:
-``` 
-lat, lng
--45.86169350576915, -67.5168749373741\n
--45.86358350471955, -67.5288741673731\n
--45.86168350521978, -67.5588749673721\n
--45.85168355574923, -67.5088749673761\n
-``` 
-
-Links:
-``` 
-from, to
-0, 1\n
-2, 1\n
-3, 1\n
-``` 
-
+```json
+{
+  "gateways": [
+    {
+        "location": [], // lat, lng
+        "sf_ranges": [
+            [], // Polygon for SF 7
+            [], // SF8
+            [], // SF9
+            [], // SF10
+            [], // SF11
+            []  // SF12
+        ]
+    }  
+  ],
+  "end_devices": [
+    {
+        "location": [], // lat, lng
+        "ufs": [] // Utilization factor for each SF
+    }
+  ],
+  "connections": [
+    [] // Gateway index from, end device index to, sf used
+  ]
+}
+```

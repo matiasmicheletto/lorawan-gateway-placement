@@ -46,6 +46,7 @@ const MapComponent = props => { // Displays geoJSON features with change callbac
             type: "FeatureCollection",
             features: [...featureCollection.features, newFeature]
         };
+        console.log(newFeature.geometry.coordinates);
         setFeatureCollection(newFeatureCollection);
     };
 
@@ -71,7 +72,7 @@ const MapComponent = props => { // Displays geoJSON features with change callbac
     };
  
     return (
-        <Box sx={{mt:3}}>
+        <Box sx={{m:0}}>
             <MapContainer 
                 center={initialLocation} 
                 zoom={13} 

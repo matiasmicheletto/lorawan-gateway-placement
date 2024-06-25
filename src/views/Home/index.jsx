@@ -5,23 +5,12 @@ import background from "../../assets/backgrounds/background3.jpg";
 import MapComponent from "../../components/LeafletMapArea"; // CanvasMapArea
 import { compute } from "../../model/core.js";
 import { 
-    csv2Matrix,
-    csv2Tensor,
     network2GeoJSON,
     geoJSON2Network 
 } from "../../model/utils";
-import {
-    nodesCSVFile,
-    linksCSVFile,
-    polygonsCSVFile
-} from "../../model/testData";
+ import network from "../../model/data.json";
 
 const initialLocation = [-45.86168350577915, -67.5188749673741]; // Comodoro Rivadavia, Argentina
-const network = {
-    nodes: csv2Matrix(nodesCSVFile),
-    links: csv2Matrix(linksCSVFile),
-    polygons: csv2Tensor(polygonsCSVFile)
-};
 
 const initialFeatureCollection = network2GeoJSON(network);
 

@@ -13,7 +13,8 @@
 
 .Container {    
     margin-bottom: 100px; /* Height of bottom navigation */
-    max-width: 900px!important;
+    margin-top: 50px;
+    max-width: 1500px!important;
     padding-left: 3%!important;
     padding-right: 3%!important;
 }
